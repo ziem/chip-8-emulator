@@ -340,13 +340,13 @@ impl<'a> Cpu<'a> {
                         self.memory.write_u8(self.i + 2, value % 10);
                     }
                     0x55 => {
-                        for x in 0..16 {
-                            self.memory.write_u8(self.i + x, self.registers[x as u8]);
+                        for register in 0..x {
+                            self.memory.write_u8(self.i + register as u16, self.registers[register as u8]);
                         }
                     }
                     0x65 => {
-                        for x in 0..16 {
-                            self.registers[x] = self.memory.read_u8(self.i + x as u16);
+                        for register in 0..x {
+                            self.registers[register] = self.memory.read_u8(self.i + register as u16);
                         }
                     }
                     _ => {}
