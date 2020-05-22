@@ -379,7 +379,7 @@ fn main() {
     let path = env::current_dir();
     println!("The current directory is {}", path.unwrap().display());
 
-    let mut file = File::open("IBM");
+    let file = File::open("IBM");
     let mut buffer = Vec::new();
 
     file.unwrap().read_to_end(&mut buffer);
