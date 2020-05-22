@@ -286,6 +286,7 @@ impl<'a> Cpu<'a> {
                 self.registers[x] = random.gen_range(0, 255) & kk;
             }
             0xD000..=0xDFFF => {
+                // todo wrapping
                 self.registers.vf = 0;
                 let mut sprite_x = self.registers[x];
                 let mut sprite_y = self.registers[y];
