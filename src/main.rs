@@ -213,15 +213,15 @@ impl<'a> Cpu<'a> {
                 self.registers[x] = kk;
             }
             0x7000..=0x7FFF => {
-                self.registers[x] = self.registers[x] + kk;
+                self.registers[x] += kk;
             }
             0x8000..=0x8FFE => {
                 let operation = opcode & 0x000F;
                 match operation {
                     0 => self.registers[x] = self.registers[y],
-                    1 => self.registers[x] = self.registers[x] | self.registers[y],
-                    2 => self.registers[x] = self.registers[x] & self.registers[y],
-                    3 => self.registers[x] = self.registers[x] ^ self.registers[y],
+                    1 => self.registers[x] |= self.registers[y],
+                    2 => self.registers[x] &= self.registers[y],
+                    3 => self.registers[x] ^= self.registers[y],
                     4 => {
                         let value: u16 = self.registers[x] as u16 + self.registers[y] as u16;
                         self.registers[x] = value as u8;
@@ -237,7 +237,7 @@ impl<'a> Cpu<'a> {
                         } else {
                             self.registers.vf = 0;
                         }
-                        self.registers[x] = self.registers[x] - self.registers[y];
+                        self.registers[x] -= self.registers[y];
                     }
                     6 => {
                         if self.registers[x] & 1 == 1 {
@@ -320,7 +320,7 @@ impl<'a> Cpu<'a> {
                     }
                     0x15 => self.delay = self.registers[x],
                     0x18 => self.sound = self.registers[x],
-                    0x1E => self.i = self.i + self.registers[x] as u16,
+                    0x1E => self.i += self.registers[x] as u16,
                     0x29 => self.i = self.registers[x] as u16 * 5,
                     0x33 => {
                         let value = self.registers[x];
