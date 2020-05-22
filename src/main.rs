@@ -382,7 +382,15 @@ fn main() {
     let file = File::open("IBM");
     let mut buffer = Vec::new();
 
-    file.unwrap().read_to_end(&mut buffer);
+    let mut file = match file {
+        Ok(file) => file,
+        Err(error) => panic!("Problem opening the file: {:?}", error),
+    };
+    let result = file.read_to_end(&mut buffer);
+    match result {
+        Ok(result) => result,
+        Err(error) => panic!("Problem reading the file: {:?}", error),
+    };
 
     println!("{}", buffer[0]);
 
