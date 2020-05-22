@@ -186,36 +186,36 @@ impl<'a> Cpu<'a> {
                 self.pc = self.stack[self.sp as usize - 1];
                 self.sp -= 1;
             }
-            0x1000...0x1FFF => {
+            0x1000..=0x1FFF => {
                 self.pc = opcode & 0x0FFF;
             }
-            0x2000...0x2FFF => {
+            0x2000..=0x2FFF => {
                 self.sp += 1;
                 self.stack[self.sp as usize - 1] = self.pc;
                 self.pc = nnn;
             }
-            0x3000...0x3FFF => {
+            0x3000..=0x3FFF => {
                 if self.registers[x] == kk {
                     self.pc += 2;
                 }
             }
-            0x4000...0x4FFF => {
+            0x4000..=0x4FFF => {
                 if self.registers[x] != kk {
                     self.pc += 2;
                 }
             }
-            0x5000...0x5FF0 => {
+            0x5000..=0x5FF0 => {
                 if self.registers[x] == self.registers[y] {
                     self.pc += 2;
                 }
             }
-            0x6000...0x6FFF => {
+            0x6000..=0x6FFF => {
                 self.registers[x] = kk;
             }
-            0x7000...0x7FFF => {
+            0x7000..=0x7FFF => {
                 self.registers[x] = self.registers[x] + kk;
             }
-            0x8000...0x8FFE => {
+            0x8000..=0x8FFE => {
                 let operation = opcode & 0x000F;
                 match operation {
                     0 => self.registers[x] = self.registers[y],
@@ -269,23 +269,21 @@ impl<'a> Cpu<'a> {
                     _ => {}
                 }
             }
-            0x9000...0x9FF0 => {
+            0x9000..=0x9FF0 => {
                 if self.registers[x] != self.registers[y] {
                     self.pc += 2;
                 }
             }
-            0xA000...0xAFFF => {
+            0xA000..=0xAFFF => {
                 self.i = nnn;
             }
-            0xB000...0xBFFF => {
+            0xB000..=0xBFFF => {
                 self.pc = nnn + self.registers.v0 as u16;
             }
-            0xC000...0xCFFF => {
+            0xC000..=0xCFFF => {
                 self.registers[x] = random.gen_range(0, 255) & kk;
             }
-            0xD000...0xDFFF => {
-                let x_coordinate = self.registers[x];
-                let y_coordinate = self.registers[y];
+            0xD000..=0xDFFF => {
 
                 self.registers.vf = 0;
 
@@ -295,7 +293,7 @@ impl<'a> Cpu<'a> {
                     }
                 }
             }
-            0xE000...0xEFFF => {
+            0xE000..=0xEFFF => {
                 let operation = kk;
                 match operation {
                     0x9E => {
@@ -311,7 +309,7 @@ impl<'a> Cpu<'a> {
                     _ => {}
                 }
             }
-            0xF007...0xFF65 => {
+            0xF007..=0xFF65 => {
                 let operation = opcode & 0x00FF;
                 match operation {
                     0x07 => self.registers[x] = self.delay,
