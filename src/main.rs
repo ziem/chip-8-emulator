@@ -284,13 +284,10 @@ impl<'a> Cpu<'a> {
                 self.registers[x] = random.gen_range(0, 255) & kk;
             }
             0xD000..=0xDFFF => {
-
                 self.registers.vf = 0;
 
                 for x in 0..8 {
-                    for y in 0..n {
-
-                    }
+                    for y in 0..n {}
                 }
             }
             0xE000..=0xEFFF => {
