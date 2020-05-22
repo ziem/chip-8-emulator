@@ -28,7 +28,7 @@ impl Index<u8> for Registers {
     type Output = u8;
 
     fn index(&self, index: u8) -> &Self::Output {
-        return match index {
+        match index {
             0 => &self.v0,
             1 => &self.v1,
             2 => &self.v2,
@@ -46,13 +46,13 @@ impl Index<u8> for Registers {
             0xE => &self.ve,
             0xF => &self.vf,
             _ => panic!("Unsupported register"),
-        };
+        }
     }
 }
 
 impl IndexMut<u8> for Registers {
     fn index_mut(&mut self, index: u8) -> &mut Self::Output {
-        return match index {
+        match index {
             0 => &mut self.v0,
             1 => &mut self.v1,
             2 => &mut self.v2,
@@ -70,7 +70,7 @@ impl IndexMut<u8> for Registers {
             0xE => &mut self.ve,
             0xF => &mut self.vf,
             _ => panic!("Unsupported register"),
-        };
+        }
     }
 }
 
@@ -86,11 +86,11 @@ impl Memory {
     }
 
     fn read_u8(&mut self, location: u16) -> u8 {
-        return self.memory[location as usize];
+        self.memory[location as usize]
     }
 
     fn read_u16(&mut self, location: u16) -> u8 {
-        return self.memory[location as usize];
+        self.memory[location as usize]
     }
 
     fn write_u8(&mut self, location: u16, value: u8) {
@@ -110,13 +110,13 @@ struct Keys {
 
 impl Keys {
     fn new() -> Keys {
-        return Keys {
+        Keys {
             keys: [false; 16]
-        };
+        }
     }
 
     fn is_pressed(&self, key: u8) -> bool {
-        return self.keys[key as usize];
+        self.keys[key as usize]
     }
 }
 
@@ -163,7 +163,7 @@ impl<'a> Cpu<'a> {
         let second_part: u16 = self.memory.read_u16(location + 1) as u16;
         let opcode: u16 = (first_part << 8 | second_part) as u16;
 
-        return opcode;
+        opcode
     }
 
     fn decode_and_execute(&mut self, opcode: u16) {
