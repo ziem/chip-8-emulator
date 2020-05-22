@@ -372,8 +372,8 @@ fn main() {
 
     let mut memory = Memory::new();
 
-    for i in 0..font.len() {
-        memory.write_u8(i as u16, font[i]);
+    for (i, &item) in font.iter().enumerate() {
+        memory.write_u8(i as u16, item);
     }
 
     let path = env::current_dir();
@@ -394,8 +394,8 @@ fn main() {
 
     println!("{}", buffer[0]);
 
-    for i in 0..buffer.len() {
-        memory.write_u8(0x200 + i as u16, buffer[i]);
+    for (i, &item) in buffer.iter().enumerate() {
+        memory.write_u8(0x200 + i as u16, item);
     }
 
     let mut cpu = Cpu::new(&mut memory);
