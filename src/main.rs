@@ -1,7 +1,7 @@
 use std::ops::{Index, IndexMut};
 use rand::Rng;
 use std::fs::File;
-use std::io::{BufReader, Read};
+use std::io::{Read};
 use std::env;
 
 #[derive(Default)]
