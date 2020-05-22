@@ -475,7 +475,7 @@ mod tests {
         cpu.cycle();
 
         assert_eq!(cpu.sp, 0);
-        assert_eq!(cpu.pc, 0x0001 + 2);
+        assert_eq!(cpu.pc, 0x0001);
     }
 
     #[test]
@@ -487,7 +487,7 @@ mod tests {
 
         cpu.cycle();
 
-        assert_eq!(cpu.pc, 0x234 + 2);
+        assert_eq!(cpu.pc, 0x234);
     }
 
     #[test]
@@ -500,8 +500,8 @@ mod tests {
         cpu.cycle();
 
         assert_eq!(cpu.sp, 1);
-        assert_eq!(cpu.stack[0], 0x200);
-        assert_eq!(cpu.pc, 0x312 + 2);
+        assert_eq!(cpu.stack[0], 0x200 + 2);
+        assert_eq!(cpu.pc, 0x312);
     }
 
     #[test]
@@ -767,7 +767,7 @@ mod tests {
 
         cpu.cycle();
 
-        assert_eq!(cpu.pc, 0x124 + 2);
+        assert_eq!(cpu.pc, 0x124);
     }
 
     // some test are missing
