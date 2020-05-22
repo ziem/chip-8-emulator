@@ -155,9 +155,9 @@ impl<'a> Cpu<'a> {
     fn cycle(&mut self) {
         let opcode: u16 = self.fetch(self.pc);
 
-        self.decode_and_execute(opcode);
-
         self.pc += 2;
+
+        self.decode_and_execute(opcode);
     }
 
     fn fetch(&mut self, location: u16) -> u16 {
