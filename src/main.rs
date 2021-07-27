@@ -1,8 +1,15 @@
-use std::ops::{Index, IndexMut};
-use rand::Rng;
-use std::fs::File;
-use std::io::{Read};
 use std::env;
+use std::fs::File;
+use std::io::Read;
+use std::ops::{Index, IndexMut};
+
+use ggez;
+use ggez::{Context, ContextBuilder, event, GameError, GameResult};
+use ggez::conf::{WindowMode, WindowSetup};
+use ggez::event::EventHandler;
+use ggez::graphics;
+use ggez::graphics::{Color, DrawParam};
+use rand::Rng;
 
 #[derive(Default)]
 struct Registers {
@@ -405,8 +412,33 @@ impl Display {
     }
 }
 
+impl EventHandler<GameError> for Cpu {
+    fn update(&mut self, _ctx: &mut Context) -> Result<(), GameError> {
+        self.cycle();
+        Ok(())
+    }
 
-fn main() {
+    fn draw(&mut self, ctx: &mut Context) -> Result<(), GameError> {
+        graphics::clear(ctx, [0.0, 0.0, 0.0, 10.0].into());
+        let pixel_size = 10.0;
+
+        for y in 0..32 {
+            for x in 0..64 {
+                if self.display.pixels[x as usize][y as usize] == 1 {
+                    let float_x = x as f32;
+                    let float_y = y as f32;
+                    let rect = graphics::Rect::new(float_x * pixel_size, float_y * pixel_size, pixel_size, pixel_size);
+                    let mesh = graphics::Mesh::new_rectangle(ctx, graphics::DrawMode::fill(), rect, Color::WHITE)?;
+                    graphics::draw(ctx, &mesh, DrawParam::default())?;
+                }
+            }
+        }
+
+        graphics::present(ctx)
+    }
+}
+
+fn main() -> GameResult {
     let path = env::current_dir();
     println!("The current directory is {}", path.unwrap().display());
 
@@ -426,20 +458,11 @@ fn main() {
     let mut cpu = Cpu::new(Memory::new(), Display::new());
     cpu.init(buffer);
 
-    for i in 0..128 {
-        cpu.cycle();
-    }
-
-    for y in 0..32 {
-        for x in 0..64 {
-            if cpu.display.pixels[x as usize][y as usize] == 1 {
-                print!("█")
-            } else {
-                print!(" ");
-            }
-        }
-        println!()
-    }
+    let context_builder = ContextBuilder::new("chip-8-emulator", "Ziem")
+        .window_setup(WindowSetup::default().title("Chip 8 emulator"))
+        .window_mode(WindowMode::default().dimensions(640.0, 320.0));
+    let (context, event_loop) = context_builder.build()?;
+    event::run(context, event_loop, cpu)
 }
 
 #[cfg(test)]
