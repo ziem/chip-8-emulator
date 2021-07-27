@@ -120,7 +120,7 @@ impl Keys {
     }
 }
 
-struct Cpu<'a> {
+struct Cpu {
     i: u16,
     pc: u16,
     stack: [u16; 16],
@@ -129,14 +129,14 @@ struct Cpu<'a> {
     delay: u8,
     sound: u8,
     registers: Registers,
-    memory: &'a mut Memory,
+    memory: Memory,
     keys: Keys,
     waiting_for_input: bool,
-    display: &'a mut Display,
+    display: Display,
 }
 
-impl<'a> Cpu<'a> {
-    fn new(memory: &'a mut Memory, display: &'a mut Display) -> Cpu<'a> {
+impl Cpu {
+    fn new(memory: Memory, display: Display) -> Cpu {
         Cpu {
             i: 0,
             pc: 0x200,
@@ -428,7 +428,7 @@ fn main() {
         memory.write_u8(0x200 + i as u16, item);
     }
 
-    let mut cpu = Cpu::new(&mut memory, &mut display);
+    let mut cpu = Cpu::new(memory, display);
     for i in 0..128 {
         cpu.cycle();
     }
@@ -455,7 +455,7 @@ mod tests {
         display.pixels[0][0] = 1;
         display.pixels[63][31] = 1;
         memory.write_u16(0x200, 0x00E0);
-        let mut cpu = Cpu::new(&mut memory, &mut display);
+        let mut cpu = Cpu::new(memory, display);
 
         cpu.cycle();
 
@@ -466,9 +466,9 @@ mod tests {
     #[test]
     fn return_from_a_subroutine() {
         let mut memory: Memory = Memory::new();
-        let mut display: Display = Display::new();
+        let display: Display = Display::new();
         memory.write_u16(0x200, 0x0EE);
-        let mut cpu = Cpu::new(&mut memory, &mut display);
+        let mut cpu = Cpu::new(memory, display);
         cpu.stack[0] = 0x0001;
         cpu.sp = 1;
 
@@ -481,9 +481,9 @@ mod tests {
     #[test]
     fn jump_to_location() {
         let mut memory: Memory = Memory::new();
-        let mut display: Display = Display::new();
+        let display: Display = Display::new();
         memory.write_u16(0x200, 0x1234);
-        let mut cpu = Cpu::new(&mut memory, &mut display);
+        let mut cpu = Cpu::new(memory, display);
 
         cpu.cycle();
 
@@ -493,9 +493,9 @@ mod tests {
     #[test]
     fn call_subroutine() {
         let mut memory: Memory = Memory::new();
-        let mut display: Display = Display::new();
+        let display: Display = Display::new();
         memory.write_u16(0x200, 0x2312);
-        let mut cpu = Cpu::new(&mut memory, &mut display);
+        let mut cpu = Cpu::new(memory, display);
 
         cpu.cycle();
 
@@ -507,9 +507,9 @@ mod tests {
     #[test]
     fn skip_next_instruction_if_vx_equals_kk() {
         let mut memory: Memory = Memory::new();
-        let mut display: Display = Display::new();
+        let display: Display = Display::new();
         memory.write_u16(0x200, 0x3144);
-        let mut cpu = Cpu::new(&mut memory, &mut display);
+        let mut cpu = Cpu::new(memory, display);
         cpu.registers.v1 = 0x44;
 
         cpu.cycle();
@@ -520,9 +520,9 @@ mod tests {
     #[test]
     fn skip_next_instruction_if_vx_not_equals_kk() {
         let mut memory: Memory = Memory::new();
-        let mut display: Display = Display::new();
+        let display: Display = Display::new();
         memory.write_u16(0x200, 0x4144);
-        let mut cpu = Cpu::new(&mut memory, &mut display);
+        let mut cpu = Cpu::new(memory, display);
         cpu.registers.v1 = 0x43;
 
         cpu.cycle();
@@ -533,9 +533,9 @@ mod tests {
     #[test]
     fn skip_next_instruction_if_vx_equals_vy() {
         let mut memory: Memory = Memory::new();
-        let mut display: Display = Display::new();
+        let display: Display = Display::new();
         memory.write_u16(0x200, 0x5120);
-        let mut cpu = Cpu::new(&mut memory, &mut display);
+        let mut cpu = Cpu::new(memory, display);
         cpu.registers.v1 = 0x44;
         cpu.registers.v2 = 0x44;
 
@@ -547,9 +547,9 @@ mod tests {
     #[test]
     fn set_vx_to_kk() {
         let mut memory: Memory = Memory::new();
-        let mut display: Display = Display::new();
+        let display: Display = Display::new();
         memory.write_u16(0x200, 0x6622);
-        let mut cpu = Cpu::new(&mut memory, &mut display);
+        let mut cpu = Cpu::new(memory, display);
 
         cpu.cycle();
 
@@ -559,9 +559,9 @@ mod tests {
     #[test]
     fn set_vx_to_vx_plus_kk() {
         let mut memory: Memory = Memory::new();
-        let mut display: Display = Display::new();
+        let display: Display = Display::new();
         memory.write_u16(0x200, 0x7422);
-        let mut cpu = Cpu::new(&mut memory, &mut display);
+        let mut cpu = Cpu::new(memory, display);
         cpu.registers.v4 = 0x22;
 
         cpu.cycle();
@@ -572,9 +572,9 @@ mod tests {
     #[test]
     fn set_vx_to_vy() {
         let mut memory: Memory = Memory::new();
-        let mut display: Display = Display::new();
+        let display: Display = Display::new();
         memory.write_u16(0x200, 0x8420);
-        let mut cpu = Cpu::new(&mut memory, &mut display);
+        let mut cpu = Cpu::new(memory, display);
         cpu.registers.v2 = 0x22;
 
         cpu.cycle();
@@ -585,9 +585,9 @@ mod tests {
     #[test]
     fn set_vx_to_vx_or_vy() {
         let mut memory: Memory = Memory::new();
-        let mut display: Display = Display::new();
+        let display: Display = Display::new();
         memory.write_u16(0x200, 0x8011);
-        let mut cpu = Cpu::new(&mut memory, &mut display);
+        let mut cpu = Cpu::new(memory, display);
         cpu.registers.v0 = 0x22;
         cpu.registers.v1 = 0x11;
 
@@ -599,9 +599,9 @@ mod tests {
     #[test]
     fn set_vx_to_vx_and_vy() {
         let mut memory: Memory = Memory::new();
-        let mut display: Display = Display::new();
+        let display: Display = Display::new();
         memory.write_u16(0x200, 0x8452);
-        let mut cpu = Cpu::new(&mut memory, &mut display);
+        let mut cpu = Cpu::new(memory, display);
         cpu.registers.v4 = 0x12;
         cpu.registers.v5 = 0x11;
 
@@ -613,9 +613,9 @@ mod tests {
     #[test]
     fn set_vx_to_vx_xor_vy() {
         let mut memory: Memory = Memory::new();
-        let mut display: Display = Display::new();
+        let display: Display = Display::new();
         memory.write_u16(0x200, 0x8453);
-        let mut cpu = Cpu::new(&mut memory, &mut display);
+        let mut cpu = Cpu::new(memory, display);
         cpu.registers.v4 = 0x12;
         cpu.registers.v5 = 0x11;
 
@@ -627,11 +627,11 @@ mod tests {
     #[test]
     fn set_vx_to_vx_plus_vy() {
         let mut memory: Memory = Memory::new();
-        let mut display: Display = Display::new();
+        let display: Display = Display::new();
         memory.write_u16(0x200, 0x8454);
         memory.write_u16(0x400, 0x8124);
 
-        let mut cpu = Cpu::new(&mut memory, &mut display);
+        let mut cpu = Cpu::new(memory, display);
         cpu.registers.v4 = 0x12;
         cpu.registers.v5 = 0x11;
 
@@ -652,11 +652,11 @@ mod tests {
     #[test]
     fn set_vx_to_vx_minus_vy() {
         let mut memory: Memory = Memory::new();
-        let mut display: Display = Display::new();
+        let display: Display = Display::new();
         memory.write_u16(0x200, 0x8455);
         memory.write_u16(0x400, 0x8125);
 
-        let mut cpu = Cpu::new(&mut memory, &mut display);
+        let mut cpu = Cpu::new(memory, display);
         cpu.registers.v4 = 0x12;
         cpu.registers.v5 = 0x11;
 
@@ -677,11 +677,11 @@ mod tests {
     #[test]
     fn set_vx_to_vx_shr_1() {
         let mut memory: Memory = Memory::new();
-        let mut display: Display = Display::new();
+        let display: Display = Display::new();
         memory.write_u16(0x200, 0x8456);
         memory.write_u16(0x400, 0x8126);
 
-        let mut cpu = Cpu::new(&mut memory, &mut display);
+        let mut cpu = Cpu::new(memory, display);
         cpu.registers.v4 = 0x12;
 
         cpu.cycle();
@@ -701,11 +701,11 @@ mod tests {
     #[test]
     fn set_vx_to_vx_shl_1() {
         let mut memory: Memory = Memory::new();
-        let mut display: Display = Display::new();
+        let display: Display = Display::new();
         memory.write_u16(0x200, 0x845E);
         memory.write_u16(0x400, 0x812E);
 
-        let mut cpu = Cpu::new(&mut memory, &mut display);
+        let mut cpu = Cpu::new(memory, display);
         cpu.registers.v4 = 0x01;
 
         cpu.cycle();
@@ -724,11 +724,11 @@ mod tests {
     #[test]
     fn skip_next_instruction_if_vx_not_equals_vy() {
         let mut memory: Memory = Memory::new();
-        let mut display: Display = Display::new();
+        let display: Display = Display::new();
         memory.write_u16(0x200, 0x9450);
         memory.write_u16(0x400, 0x9120);
 
-        let mut cpu = Cpu::new(&mut memory, &mut display);
+        let mut cpu = Cpu::new(memory, display);
         cpu.registers.v4 = 0x01;
         cpu.registers.v5 = 0x01;
 
@@ -748,9 +748,9 @@ mod tests {
     #[test]
     fn set_i_to_nnn() {
         let mut memory: Memory = Memory::new();
-        let mut display: Display = Display::new();
+        let display: Display = Display::new();
         memory.write_u16(0x200, 0xA123);
-        let mut cpu = Cpu::new(&mut memory, &mut display);
+        let mut cpu = Cpu::new(memory, display);
 
         cpu.cycle();
 
@@ -760,9 +760,9 @@ mod tests {
     #[test]
     fn jump_to_location_nnn_plus_v0() {
         let mut memory: Memory = Memory::new();
-        let mut display: Display = Display::new();
+        let display: Display = Display::new();
         memory.write_u16(0x200, 0xB123);
-        let mut cpu = Cpu::new(&mut memory, &mut display);
+        let mut cpu = Cpu::new(memory, display);
         cpu.registers.v0 = 1;
 
         cpu.cycle();
@@ -775,9 +775,9 @@ mod tests {
     #[test]
     fn set_vx_to_delay() {
         let mut memory: Memory = Memory::new();
-        let mut display: Display = Display::new();
+        let display: Display = Display::new();
         memory.write_u16(0x200, 0xF107);
-        let mut cpu = Cpu::new(&mut memory, &mut display);
+        let mut cpu = Cpu::new(memory, display);
         cpu.delay = 0x76;
 
         cpu.cycle();
@@ -788,9 +788,9 @@ mod tests {
     #[test]
     fn set_delay_to_vx() {
         let mut memory: Memory = Memory::new();
-        let mut display: Display = Display::new();
+        let display: Display = Display::new();
         memory.write_u16(0x200, 0xF115);
-        let mut cpu = Cpu::new(&mut memory, &mut display);
+        let mut cpu = Cpu::new(memory, display);
         cpu.registers.v1 = 0x76;
 
         cpu.cycle();
@@ -801,9 +801,9 @@ mod tests {
     #[test]
     fn set_sound_to_vx() {
         let mut memory: Memory = Memory::new();
-        let mut display: Display = Display::new();
+        let display: Display = Display::new();
         memory.write_u16(0x200, 0xF818);
-        let mut cpu = Cpu::new(&mut memory, &mut display);
+        let mut cpu = Cpu::new(memory, display);
         cpu.registers.v8 = 0x11;
 
         cpu.cycle();
@@ -814,9 +814,9 @@ mod tests {
     #[test]
     fn set_i_to_i_plus_vx() {
         let mut memory: Memory = Memory::new();
-        let mut display: Display = Display::new();
+        let display: Display = Display::new();
         memory.write_u16(0x200, 0xF31E);
-        let mut cpu = Cpu::new(&mut memory, &mut display);
+        let mut cpu = Cpu::new(memory, display);
         cpu.i = 0x05;
         cpu.registers.v3 = 0x11;
 
