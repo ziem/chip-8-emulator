@@ -322,10 +322,9 @@ impl Cpu {
                 self.registers[x] = random.gen_range(0, 255) & kk;
             }
             0xD000..=0xDFFF => {
-                // todo wrapping
                 self.registers.vf = 0;
-                let mut sprite_x = self.registers[x];
-                let mut sprite_y = self.registers[y];
+                let mut sprite_x = self.registers[x] % 64;
+                let mut sprite_y = self.registers[y] % 32;
                 for i in self.i..(self.i + n as u16) {
                     let byte = self.memory.read_u8(i);
                     for index in 0..8 {
@@ -336,9 +335,17 @@ impl Cpu {
 
                         self.display.pixels[sprite_x as usize][sprite_y as usize] ^= value;
                         sprite_x += 1;
+
+                        if sprite_x > 63 {
+                            break;
+                        }
                     }
                     sprite_x = self.registers[x];
                     sprite_y += 1;
+
+                    if sprite_y > 31 {
+                        break;
+                    }
                 }
             }
             0xE000..=0xEFFF => {
