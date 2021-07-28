@@ -251,7 +251,8 @@ impl Cpu {
                 self.registers[x] = kk;
             }
             0x7000..=0x7FFF => {
-                self.registers[x] += kk;
+                let value: u16 = self.registers[x] as u16 + kk as u16;
+                self.registers[x] = value as u8;
             }
             0x8000..=0x8FFE => {
                 let operation = opcode & 0x000F;
@@ -275,7 +276,7 @@ impl Cpu {
                         } else {
                             self.registers.vf = 0;
                         }
-                        self.registers[x] -= self.registers[y];
+                        self.registers[x] = self.registers[x].wrapping_sub(self.registers[y]);
                     }
                     6 => {
                         if self.registers[x] & 1 == 1 {
@@ -287,22 +288,23 @@ impl Cpu {
                         self.registers[x] /= 2;
                     }
                     7 => {
+                        self.registers[x] = self.registers[y].wrapping_sub(self.registers[x]);
+
                         if self.registers[y] > self.registers[x] {
                             self.registers.vf = 1;
                         } else {
                             self.registers.vf = 0;
                         }
-                        self.registers[x] = self.registers[y] - self.registers[x];
                     }
                     0xE => {
-                        if self.registers[x] & (1 << 4) != 0 {
+                        if self.registers[x] & (1 << 7) != 0 {
                             self.registers.vf = 1;
                         } else {
                             self.registers.vf = 0;
                         }
 
-                        let temp: u16 = (self.registers[x] as u16) * 2;
-                        self.registers[x] = temp as u8;
+                        let value: u16 = (self.registers[x] as u16) * 2;
+                        self.registers[x] = value as u8;
                     }
                     _ => {}
                 }
@@ -384,12 +386,12 @@ impl Cpu {
                         self.memory.write_u8(self.i + 2, value % 10);
                     }
                     0x55 => {
-                        for register in 0..x {
+                        for register in 0..(x + 1) {
                             self.memory.write_u8(self.i + register as u16, self.registers[register as u8]);
                         }
                     }
                     0x65 => {
-                        for register in 0..x {
+                        for register in 0..(x + 1) {
                             self.registers[register] = self.memory.read_u8(self.i + register as u16);
                         }
                     }
