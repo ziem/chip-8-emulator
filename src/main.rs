@@ -1,4 +1,4 @@
-use std::env;
+use std::{env, thread, time};
 use std::fs::File;
 use std::io::Read;
 use std::ops::{Index, IndexMut};
@@ -6,10 +6,12 @@ use std::ops::{Index, IndexMut};
 use ggez;
 use ggez::{Context, ContextBuilder, event, GameError, GameResult};
 use ggez::conf::{WindowMode, WindowSetup};
-use ggez::event::EventHandler;
+use ggez::event::{EventHandler, MouseButton, KeyMods, Button, GamepadId, Axis, ErrorOrigin};
 use ggez::graphics;
 use ggez::graphics::{Color, DrawParam};
+use ggez::input::keyboard::KeyCode;
 use rand::Rng;
+use std::time::Duration;
 
 #[derive(Default)]
 struct Registers {
@@ -125,6 +127,29 @@ impl Keys {
     fn is_pressed(&self, key: u8) -> bool {
         self.keys[key as usize]
     }
+
+    fn is_any_pressed(&self) -> bool {
+        for key in self.keys {
+            if key {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    fn get_pressed(&self) -> Option<u8> {
+        for (i, &key) in self.keys.iter().enumerate() {
+            if key {
+                return Some(i as u8);
+            }
+        }
+
+        return None;
+    }
+
+    fn set_state(&mut self, key: u8, state: bool) {
+        self.keys[key as usize] = state;
+    }
 }
 
 struct Cpu {
@@ -189,11 +214,16 @@ impl Cpu {
     }
 
     fn cycle(&mut self) {
+        println!("PC: {}", self.pc);
         let opcode: u16 = self.fetch(self.pc);
 
-        self.pc += 2;
-
         self.decode_and_execute(opcode);
+
+        if !self.waiting_for_input {
+
+            println!("cycle");
+            self.pc += 2;
+        }
     }
 
     fn fetch(&mut self, location: u16) -> u16 {
@@ -354,11 +384,13 @@ impl Cpu {
                 let operation = kk;
                 match operation {
                     0x9E => {
+                        println!("keys 1");
                         if self.keys.is_pressed(self.registers[x]) {
                             self.pc += 2;
                         }
                     }
                     0xA1 => {
+                        println!("keys 2");
                         if !self.keys.is_pressed(self.registers[x]) {
                             self.pc += 2;
                         }
@@ -371,9 +403,27 @@ impl Cpu {
                 match operation {
                     0x07 => self.registers[x] = self.delay,
                     0x0A => {
-                        // wait for a key press
-                        self.waiting_for_input = true;
-                        // todo
+                        println!("wait for input");
+
+                        if !self.waiting_for_input {
+                            println!("wait for input true");
+                            self.waiting_for_input = true
+                        } else {
+                            match self.keys.get_pressed() {
+                                Some(key) => {
+
+                                    println!("wait for input: key");
+                                    self.registers[x] = key;
+                                    self.waiting_for_input = false;
+                                    println!("wait for input truee");
+                                }
+                                None => {
+                                    self.waiting_for_input = true;
+
+                                    println!("wait for input trueee");
+                                },
+                            }
+                        }
                     }
                     0x15 => self.delay = self.registers[x],
                     0x18 => self.sound = self.registers[x],
@@ -424,6 +474,7 @@ impl Display {
 impl EventHandler<GameError> for Cpu {
     fn update(&mut self, _ctx: &mut Context) -> Result<(), GameError> {
         self.cycle();
+        thread::sleep(Duration::from_millis(200));
         Ok(())
     }
 
@@ -444,6 +495,56 @@ impl EventHandler<GameError> for Cpu {
         }
 
         graphics::present(ctx)
+    }
+
+    fn key_down_event(&mut self, _ctx: &mut Context, keycode: KeyCode, _keymods: KeyMods, _repeat: bool) {
+        match keycode {
+            KeyCode::Key1 => self.keys.set_state(1, true),
+            KeyCode::Key2 => self.keys.set_state(2, true),
+            KeyCode::Key3 => self.keys.set_state(3, true),
+            KeyCode::Key4 => self.keys.set_state(0xC, true),
+
+            KeyCode::Q => self.keys.set_state(4, true),
+            KeyCode::W => self.keys.set_state(5, true),
+            KeyCode::E => self.keys.set_state(6, true),
+            KeyCode::R => self.keys.set_state(0xD, true),
+
+            KeyCode::A => self.keys.set_state(7, true),
+            KeyCode::S => self.keys.set_state(8, true),
+            KeyCode::D => self.keys.set_state(9, true),
+            KeyCode::F => self.keys.set_state(0xE, true),
+
+            KeyCode::Z => self.keys.set_state(0xA, true),
+            KeyCode::X => self.keys.set_state(0, true),
+            KeyCode::C => self.keys.set_state(0xB, true),
+            KeyCode::V => self.keys.set_state(0xF, true),
+            _ => {}
+        }
+    }
+
+    fn key_up_event(&mut self, _ctx: &mut Context, keycode: KeyCode, _keymods: KeyMods) {
+        match keycode {
+            KeyCode::Key1 => self.keys.set_state(1, false),
+            KeyCode::Key2 => self.keys.set_state(2, false),
+            KeyCode::Key3 => self.keys.set_state(3, false),
+            KeyCode::Key4 => self.keys.set_state(0xC, false),
+
+            KeyCode::Q => self.keys.set_state(4, false),
+            KeyCode::W => self.keys.set_state(5, false),
+            KeyCode::E => self.keys.set_state(6, false),
+            KeyCode::R => self.keys.set_state(0xD, false),
+
+            KeyCode::A => self.keys.set_state(7, false),
+            KeyCode::S => self.keys.set_state(8, false),
+            KeyCode::D => self.keys.set_state(9, false),
+            KeyCode::F => self.keys.set_state(0xE, false),
+
+            KeyCode::Z => self.keys.set_state(0xA, false),
+            KeyCode::X => self.keys.set_state(0, false),
+            KeyCode::C => self.keys.set_state(0xB, false),
+            KeyCode::V => self.keys.set_state(0xF, false),
+            _ => {}
+        }
     }
 }
 
