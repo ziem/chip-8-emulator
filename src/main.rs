@@ -3,7 +3,6 @@ use std::fs::File;
 use std::io::Read;
 use std::ops::{Index, IndexMut};
 
-use ggez;
 use ggez::{Context, ContextBuilder, event, GameError, GameResult};
 use ggez::conf::{WindowMode, WindowSetup};
 use ggez::event::EventHandler;
@@ -199,7 +198,7 @@ impl Cpu {
     fn fetch(&mut self, location: u16) -> u16 {
         let first_part: u16 = self.memory.read_u16(location) as u16;
         let second_part: u16 = self.memory.read_u16(location + 1) as u16;
-        let opcode: u16 = (first_part << 8 | second_part) as u16;
+        let opcode: u16 = first_part << 8 | second_part;
 
         opcode
     }
@@ -387,7 +386,7 @@ impl Cpu {
                     }
                     0x55 => {
                         for register in 0..(x + 1) {
-                            self.memory.write_u8(self.i + register as u16, self.registers[register as u8]);
+                            self.memory.write_u8(self.i + register as u16, self.registers[register]);
                         }
                     }
                     0x65 => {
